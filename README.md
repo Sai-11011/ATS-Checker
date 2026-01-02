@@ -57,7 +57,7 @@ ResumeAI is a modern, AI-powered tool designed to help job seekers optimize thei
 ```bash
 git clone https://github.com/Sai-11011/ATS-Checker.git
 cd ATS-Checker
-
+```
 ### 2. Install Backend Dependencies
 
 It is recommended to use a virtual environment.
@@ -94,7 +94,7 @@ python app.py
 The server will start at:
 
 ```
-http://localhost:8080
+http://127.0.0.1:5000/
 ```
 
 ### Open the Frontend
@@ -111,8 +111,9 @@ Open `index.html` directly in your browser.
 ```
 resume-ai-scanner/
 │
-├── app.py              # Flask backend application
-├── index.html          # Main frontend user interface
+├── main.py # Flask backend application
+├── templates/         
+│    └──index.html          # Main frontend user interface
 ├── uploads/            # Temporary storage for uploaded PDFs
 └── README.md           # Project documentation
 ```
