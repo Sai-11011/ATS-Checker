@@ -1,1 +1,12 @@
-# ATS-Checker
+📄 ResumeAI - ATS Resume ScannerResumeAI is a modern, AI-powered tool designed to help job seekers optimize their resumes for Applicant Tracking Systems (ATS). By analyzing a resume PDF against a specific job description, it provides an instant match score, identifies missing keywords, and offers actionable improvement suggestions using Google's Gemini AI.✨ FeaturesInstant Match Score: Get a 0-100% compatibility score based on keyword matching.AI-Powered Analysis: Uses Google Gemini (Generative AI) to understand context, not just simple text matching.Missing Keywords: Identifies critical hard skills, soft skills, and tools mentioned in the JD but missing from your resume.Improvement Suggestions: Actionable advice on how to rephrase bullet points.Privacy Focused: Files are processed locally or temporarily; no long-term storage (configurable).Modern UI: Responsive, glassmorphism-inspired design built with Tailwind CSS.🛠️ Tech StackFrontend:HTML5, Vanilla JavaScriptTailwind CSS (via CDN)Lucide IconsBackend:Python 3.xFlaskGoogle GenAI SDK (google-genai)PyPDF2 (for PDF parsing)🚀 Getting StartedPrerequisitesPython 3.8 or higher installed.A Google Cloud API Key for Gemini AI.InstallationClone the repositorygit clone [https://github.com/Sai-11011/ATS-Checker.git](https://github.com/Sai-11011/ATS-Checker.git)
+cd resume-ai-scanner
+Install Backend DependenciesIt's recommended to use a virtual environment.pip install flask google-genai PyPDF2
+Configure API KeyOpen app.py and replace the placeholder with your actual key, or set it as an environment variable (recommended).client = genai.Client(api_key="YOUR_ACTUAL_API_KEY")
+Running the ApplicationStart the Flask Serverpython app.py
+The server will start at http://localhost:8080.Open the FrontendOpen index.html in your browser.Note: If you are serving the HTML file separately (e.g., via Live Server), ensure the fetch URL in the JavaScript matches your Flask server address.📂 Project Structureresume-ai-scanner/
+│
+├── app.py              # Flask backend application
+├── index.html          # Main frontend user interface
+├── uploads/            # Temporary storage for uploaded PDFs
+└── README.md           # Project documentation
+💡 UsageUpload Resume: Drag and drop your PDF resume into the upload zone.Paste Job Description: Copy the full text of the job posting you are interested in.Analyze: Click "Analyze Resume."Review: Check your ATS Score and review the detailed feedback to optimize your application.🤝 ContributingContributions are welcome! Please fork the repository and submit a pull request for any features or bug fixes.📄 LicenseThis project is licensed under the MIT License - see the LICENSE file for details.
