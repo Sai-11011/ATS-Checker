@@ -1,0 +1,479 @@
+<!DOCTYPE html>
+<html lang="en" class="scroll-smooth">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ResumeAI - Professional ATS Checker</title>
+    
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- Lucide Icons -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+
+    <style>
+        body { font-family: 'Plus Jakarta Sans', sans-serif; }
+        
+        /* Custom Scrollbar */
+        ::-webkit-scrollbar { width: 8px; }
+        ::-webkit-scrollbar-track { background: #f8fafc; }
+        ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
+        ::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
+
+        /* Animations */
+        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+        @keyframes slideUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+        
+        .fade-in { animation: fadeIn 0.6s ease-out forwards; }
+        .slide-up { animation: slideUp 0.6s ease-out forwards; }
+
+        .loader {
+            border: 3px solid rgba(255,255,255,0.3);
+            border-radius: 50%;
+            border-top: 3px solid white;
+            width: 20px;
+            height: 20px;
+            animation: spin 1s linear infinite;
+        }
+
+        /* Glassmorphism & Gradients */
+        .glass-panel {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.5);
+        }
+
+        .bg-grid-pattern {
+            background-image: radial-gradient(#e2e8f0 1px, transparent 1px);
+            background-size: 24px 24px;
+        }
+
+        /* Circular Progress Bar for Score */
+        .progress-circle {
+            width: 120px;
+            height: 120px;
+            border-radius: 50%;
+            background: conic-gradient(var(--score-color) var(--score-percent), #f1f5f9 0deg);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+            transition: all 1s ease-out;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+        }
+        .progress-circle::before {
+            content: "";
+            position: absolute;
+            width: 100px;
+            height: 100px;
+            border-radius: 50%;
+            background: white;
+        }
+        .progress-value {
+            position: relative;
+            font-size: 2.25rem;
+            font-weight: 800;
+            color: #1e293b;
+        }
+    </style>
+</head>
+<body class="bg-slate-50 text-slate-900 min-h-screen selection:bg-indigo-100 selection:text-indigo-900 flex flex-col">
+
+    <!-- Navbar -->
+    <nav class="fixed w-full z-50 bg-white/80 backdrop-blur-md border-b border-slate-200 transition-all duration-300">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 h-16 flex items-center justify-between">
+            <div class="flex items-center gap-2">
+                <div class="w-8 h-8 bg-indigo-600 rounded-lg flex items-center justify-center text-white shadow-md shadow-indigo-200">
+                    <i data-lucide="scan-search" class="w-5 h-5"></i>
+                </div>
+                <span class="font-bold text-xl tracking-tight text-slate-900">Resume<span class="text-indigo-600">AI</span></span>
+            </div>
+            <div class="flex items-center space-x-4">
+                 <label class="flex items-center cursor-pointer text-xs font-semibold text-slate-500 hover:text-indigo-600 transition-colors select-none bg-slate-100 px-3 py-1.5 rounded-full border border-slate-200 hover:border-indigo-200">
+                    <input type="checkbox" id="simulationToggle" class="mr-2 accent-indigo-600 w-4 h-4">
+                    Demo Mode
+                </label>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Main App Section -->
+    <main id="scanner" class="pt-28 pb-12 relative bg-slate-50 min-h-screen">
+        <div class="absolute inset-0 bg-grid-pattern opacity-[0.4] -z-10"></div>
+        <div class="absolute top-0 right-0 -mr-20 -mt-20 w-[500px] h-[500px] bg-indigo-100 rounded-full blur-3xl opacity-50 -z-10"></div>
+        <div class="absolute bottom-0 left-0 -ml-20 -mb-20 w-[400px] h-[400px] bg-blue-50 rounded-full blur-3xl opacity-50 -z-10"></div>
+
+        <div class="max-w-6xl mx-auto px-4 sm:px-6">
+            
+            <!-- App Container -->
+            <div class="glass-panel rounded-3xl shadow-2xl shadow-slate-200/60 overflow-hidden border border-white/60">
+                <div class="grid grid-cols-1 lg:grid-cols-12 min-h-[600px]">
+                    
+                    <!-- Left Sidebar: Inputs -->
+                    <div class="lg:col-span-5 bg-white/60 p-8 lg:p-10 border-r border-slate-200 flex flex-col gap-6 backdrop-blur-sm">
+                        <div>
+                            <h2 class="text-2xl font-bold text-slate-900 mb-2">Analyzer Dashboard</h2>
+                            <p class="text-sm text-slate-500 leading-relaxed">Upload your resume and the job description to get a detailed ATS compatibility analysis.</p>
+                        </div>
+
+                        <!-- Step 1: Upload -->
+                        <div class="space-y-3">
+                            <label class="block text-sm font-bold text-slate-700 uppercase tracking-wide text-[11px]">1. Upload Resume (PDF)</label>
+                            <div id="dropZone" class="group border-2 border-dashed border-slate-300 rounded-xl p-8 text-center transition-all duration-300 cursor-pointer hover:border-indigo-500 hover:bg-indigo-50/50 hover:shadow-md relative bg-white">
+                                <input type="file" id="fileInput" accept=".pdf" class="hidden">
+                                
+                                <!-- Empty State -->
+                                <div id="uploadEmptyState" class="flex flex-col items-center pointer-events-none transition-opacity">
+                                    <div class="w-14 h-14 bg-slate-100 text-slate-400 rounded-full flex items-center justify-center mb-4 group-hover:scale-110 group-hover:bg-indigo-100 group-hover:text-indigo-600 transition-all duration-300">
+                                        <i data-lucide="upload-cloud" class="w-7 h-7"></i>
+                                    </div>
+                                    <p class="font-semibold text-slate-700">Click to upload or drag & drop</p>
+                                    <p class="text-xs text-slate-400 mt-1">PDF format, max 10MB</p>
+                                </div>
+
+                                <!-- File Selected State -->
+                                <div id="fileSelectedState" class="hidden flex-col items-center animate-in fade-in zoom-in duration-300">
+                                    <div class="w-14 h-14 bg-emerald-100 text-emerald-600 rounded-full flex items-center justify-center mb-4 shadow-sm">
+                                        <i data-lucide="file-check" class="w-7 h-7"></i>
+                                    </div>
+                                    <p id="fileName" class="font-bold text-emerald-900 break-all px-2 text-sm text-center"></p>
+                                    <button id="removeFileBtn" class="mt-3 text-xs text-slate-400 hover:text-red-500 font-bold uppercase tracking-wide hover:underline z-20 relative transition-colors">Change File</button>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Step 2: JD -->
+                        <div class="space-y-3 flex-grow flex flex-col">
+                            <label class="block text-sm font-bold text-slate-700 uppercase tracking-wide text-[11px]">2. Job Description</label>
+                            <textarea id="jobDescription" placeholder="Paste the full job description here..." 
+                                class="w-full flex-grow min-h-[140px] p-4 rounded-xl bg-white border border-slate-200 focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/10 focus:outline-none transition-all resize-none text-sm text-slate-700 placeholder:text-slate-400 font-mono leading-relaxed shadow-sm"></textarea>
+                        </div>
+
+                        <!-- Error Banner -->
+                        <div id="errorMessage" class="hidden bg-red-50 text-red-600 p-3 rounded-lg text-sm flex items-center gap-2 border border-red-100 animate-pulse">
+                            <i data-lucide="alert-octagon" class="w-4 h-4"></i>
+                            <span id="errorText">Error text</span>
+                        </div>
+
+                        <!-- Action Button -->
+                        <div class="pt-2">
+                            <button id="analyzeBtn" class="w-full py-4 rounded-xl font-bold text-lg shadow-xl shadow-indigo-200/50 transition-all duration-200 transform hover:translate-y-[-2px] active:scale-[0.98] flex items-center justify-center space-x-2 bg-slate-900 text-white hover:bg-indigo-600 hover:shadow-indigo-500/30 disabled:opacity-50 disabled:cursor-not-allowed disabled:shadow-none disabled:transform-none">
+                                <i data-lucide="sparkles" class="w-5 h-5 btn-icon"></i>
+                                <div class="loader hidden btn-loader"></div>
+                                <span class="btn-text">Analyze Resume</span>
+                            </button>
+                            <p id="simModeText" class="text-[10px] text-center text-slate-400 mt-2 font-bold uppercase tracking-widest hidden">Demo Mode Active</p>
+                        </div>
+                    </div>
+
+                    <!-- Right Content: Results -->
+                    <div class="lg:col-span-7 bg-white p-8 lg:p-10 relative overflow-hidden flex flex-col">
+                        
+                        <!-- Initial Placeholder -->
+                        <div id="resultsPlaceholder" class="h-full flex flex-col items-center justify-center text-center p-8 animate-in fade-in duration-700">
+                            <div class="w-24 h-24 bg-slate-50 rounded-full flex items-center justify-center mb-6 shadow-sm border border-slate-100">
+                                <i data-lucide="bar-chart-big" class="w-10 h-10 text-slate-300"></i>
+                            </div>
+                            <h3 class="text-xl font-bold text-slate-800 mb-2">Ready to Analyze</h3>
+                            <p class="text-slate-500 max-w-sm mx-auto leading-relaxed">Upload your resume and a job description to see your ATS compatibility score and detailed insights.</p>
+                        </div>
+
+                        <!-- Results Container -->
+                        <div id="resultsContainer" class="hidden h-full flex flex-col gap-6 slide-up relative z-10">
+                            
+                            <!-- Header & Score -->
+                            <div class="flex flex-col sm:flex-row items-center sm:items-start justify-between gap-6 pb-6 border-b border-slate-100">
+                                <div>
+                                    <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-emerald-50 text-emerald-700 text-[10px] font-bold uppercase tracking-wider mb-3 border border-emerald-100">
+                                        <i data-lucide="check-circle" class="w-3 h-3"></i> Analysis Complete
+                                    </div>
+                                    <h3 class="text-3xl font-extrabold text-slate-900 tracking-tight">Match Report</h3>
+                                    <p class="text-slate-500 text-sm mt-1 font-medium">AI-generated feedback based on your inputs.</p>
+                                </div>
+                                
+                                <!-- Circular Score -->
+                                <div class="flex flex-col items-center scale-90 sm:scale-100 origin-right">
+                                    <div class="progress-circle bg-white" id="scoreCircle" style="--score-percent: 0%; --score-color: #4f46e5;">
+                                        <span class="progress-value font-mono" id="scoreValue">0</span>
+                                    </div>
+                                    <span class="text-[10px] font-bold text-slate-400 mt-3 uppercase tracking-widest">ATS Score</span>
+                                </div>
+                            </div>
+
+                            <!-- Content Area -->
+                            <div class="flex-grow overflow-y-auto pr-2 custom-scrollbar space-y-6">
+                                <div class="bg-slate-50 rounded-2xl p-1">
+                                    <div class="markdown-content space-y-4" id="atsResultContent">
+                                        <!-- Content injected here via JS -->
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <script>
+        // --- Icons Init ---
+        lucide.createIcons();
+
+        // --- State Management ---
+        let selectedFile = null;
+        let isSimulating = false; 
+
+        // --- Elements ---
+        const dropZone = document.getElementById('dropZone');
+        const fileInput = document.getElementById('fileInput');
+        const uploadEmptyState = document.getElementById('uploadEmptyState');
+        const fileSelectedState = document.getElementById('fileSelectedState');
+        const fileNameDisplay = document.getElementById('fileName');
+        const removeFileBtn = document.getElementById('removeFileBtn');
+        const jobDescInput = document.getElementById('jobDescription');
+        const analyzeBtn = document.getElementById('analyzeBtn');
+        const btnText = document.querySelector('.btn-text');
+        const btnLoader = document.querySelector('.btn-loader');
+        const btnIcon = document.querySelector('.btn-icon');
+        const errorMessage = document.getElementById('errorMessage');
+        const errorText = document.getElementById('errorText');
+        const resultsPlaceholder = document.getElementById('resultsPlaceholder');
+        const resultsContainer = document.getElementById('resultsContainer');
+        const simulationToggle = document.getElementById('simulationToggle');
+        const simModeText = document.getElementById('simModeText');
+        
+        // Score Elements
+        const scoreCircle = document.getElementById('scoreCircle');
+        const scoreValue = document.getElementById('scoreValue');
+
+        // --- Event Listeners ---
+        
+        // Simulation Toggle
+        simulationToggle.addEventListener('change', (e) => {
+            isSimulating = e.target.checked;
+            simModeText.style.display = isSimulating ? 'block' : 'none';
+        });
+
+        // Drag & Drop
+        dropZone.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            dropZone.classList.add('border-indigo-500', 'bg-indigo-50/50');
+            dropZone.classList.remove('border-slate-300');
+        });
+
+        dropZone.addEventListener('dragleave', (e) => {
+            e.preventDefault();
+            dropZone.classList.remove('border-indigo-500', 'bg-indigo-50/50');
+            dropZone.classList.add('border-slate-300');
+        });
+
+        dropZone.addEventListener('drop', (e) => {
+            e.preventDefault();
+            dropZone.classList.remove('border-indigo-500', 'bg-indigo-50/50');
+            dropZone.classList.add('border-slate-300');
+            if (e.dataTransfer.files.length) handleFileSelect(e.dataTransfer.files[0]);
+        });
+
+        // Click to Upload
+        dropZone.addEventListener('click', () => fileInput.click());
+        fileInput.addEventListener('change', (e) => {
+            if (e.target.files.length) handleFileSelect(e.target.files[0]);
+        });
+
+        // Remove File
+        removeFileBtn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            selectedFile = null;
+            fileInput.value = '';
+            updateFileUI();
+            checkFormValidity();
+        });
+
+        // Job Description Input
+        jobDescInput.addEventListener('input', checkFormValidity);
+
+        // Analyze Button
+        analyzeBtn.addEventListener('click', handleAnalyze);
+
+        // --- Functions ---
+
+        function handleFileSelect(file) {
+            if (file.type !== 'application/pdf') {
+                showError('Only PDF files are supported.');
+                return;
+            }
+            selectedFile = file;
+            hideError();
+            updateFileUI();
+            checkFormValidity();
+        }
+
+        function updateFileUI() {
+            if (selectedFile) {
+                uploadEmptyState.classList.add('hidden');
+                fileSelectedState.classList.remove('hidden');
+                fileSelectedState.classList.add('flex');
+                fileNameDisplay.textContent = selectedFile.name;
+                dropZone.classList.add('border-emerald-400', 'bg-emerald-50/30');
+                dropZone.classList.remove('border-slate-300', 'hover:border-indigo-500', 'hover:bg-indigo-50/50');
+            } else {
+                uploadEmptyState.classList.remove('hidden');
+                fileSelectedState.classList.add('hidden');
+                fileSelectedState.classList.remove('flex');
+                dropZone.classList.remove('border-emerald-400', 'bg-emerald-50/30');
+                dropZone.classList.add('border-slate-300', 'hover:border-indigo-500', 'hover:bg-indigo-50/50');
+            }
+        }
+
+        function checkFormValidity() {
+            if (selectedFile && jobDescInput.value.trim().length > 0) {
+                analyzeBtn.disabled = false;
+                analyzeBtn.classList.remove('opacity-50', 'cursor-not-allowed', 'shadow-none');
+            } else {
+                analyzeBtn.disabled = true;
+                analyzeBtn.classList.add('opacity-50', 'cursor-not-allowed', 'shadow-none');
+            }
+        }
+
+        function showError(msg) {
+            errorMessage.classList.remove('hidden');
+            errorText.textContent = msg;
+        }
+
+        function hideError() {
+            errorMessage.classList.add('hidden');
+        }
+
+        function setLoading(loading) {
+            if (loading) {
+                analyzeBtn.disabled = true;
+                btnText.textContent = 'Analyzing...';
+                btnLoader.classList.remove('hidden');
+                btnIcon.classList.add('hidden');
+                resultsPlaceholder.classList.remove('hidden');
+                resultsContainer.classList.add('hidden');
+            } else {
+                analyzeBtn.disabled = false;
+                btnText.textContent = 'Analyze Resume';
+                btnLoader.classList.add('hidden');
+                btnIcon.classList.remove('hidden');
+            }
+        }
+
+        async function handleAnalyze() {
+            setLoading(true);
+            hideError();
+
+            try {
+                let resultData;
+                
+                if (isSimulating) {
+                    await new Promise(r => setTimeout(r, 2000));
+                    resultData = {
+                        success: true,
+                        data: {
+                            score: 82,
+                            analysis: "### Strong Match\n\n- Strong experience in **Python** and **AWS** as required.\n- Clear project history demonstrating **API development**.\n\n### Missing Keywords\n- **Docker** and **Kubernetes** are missing from your skills section.\n- Experience with **Agile methodologies** is not explicitly mentioned.\n\n### Formatting\n- Clean layout, easy to parse.\n- Consider moving education to the bottom."
+                        }
+                    };
+                } else {
+                    const formData = new FormData();
+                    formData.append('pdf_file', selectedFile);
+                    formData.append('job_description', jobDescInput.value);
+
+                    const response = await fetch('/analyze', {
+                        method: 'POST',
+                        body: formData
+                    });
+
+                    if (!response.ok) throw new Error('Server returned ' + response.status);
+                    resultData = await response.json();
+                }
+
+                if (resultData.success) {
+                    const { score, analysis } = resultData.data;
+                    document.getElementById('atsResultContent').innerHTML = parseMarkdown(analysis);
+                    updateScoreVisuals(score);
+                    resultsPlaceholder.classList.add('hidden');
+                    resultsContainer.classList.remove('hidden');
+                    
+                    if (window.innerWidth < 1024) {
+                        document.getElementById('scanner').scrollIntoView({ behavior: 'smooth' });
+                    }
+                } else {
+                    showError(resultData.error || 'Analysis failed. Please try again.');
+                }
+
+            } catch (err) {
+                console.error(err);
+                showError('Connection failed. Ensure Backend is running.');
+            } finally {
+                setLoading(false);
+            }
+        }
+
+        function updateScoreVisuals(score) {
+            scoreValue.textContent = score;
+            let color = '#ef4444'; // Red
+            if (score >= 50) color = '#f59e0b'; // Orange
+            if (score >= 70) color = '#10b981'; // Green
+            if (score >= 90) color = '#4f46e5'; // Indigo
+
+            scoreCircle.style.setProperty('--score-color', color);
+            scoreCircle.style.setProperty('--score-percent', `${score}%`);
+            scoreValue.style.color = color;
+        }
+
+        // --- Enhanced Markdown Parser ---
+        function parseMarkdown(text) {
+            if (!text) return '';
+            
+            // Basic sanitization
+            let html = text
+                .replace(/&/g, "&amp;")
+                .replace(/</g, "&lt;")
+                .replace(/>/g, "&gt;");
+
+            // Clean up code blocks if any
+            html = html.replace(/```[\s\S]*?```/g, '');
+
+            // 1. Headers (### Title) -> Styled Header with Accent
+            html = html.replace(/^###\s+(.*$)/gim, 
+                `<div class="mt-6 mb-3 flex items-center gap-2">
+                    <span class="w-1 h-5 bg-indigo-500 rounded-full"></span>
+                    <h3 class="text-lg font-bold text-slate-800">$1</h3>
+                 </div>`);
+            
+            // 2. Sub-headers (## Title)
+            html = html.replace(/^##\s+(.*$)/gim, 
+                '<h4 class="text-md font-bold text-slate-700 mt-4 mb-2 pl-2">$1</h4>');
+
+            // 3. Bold Text (**text**) -> Badge Style
+            html = html.replace(/\*\*(.*?)\*\*/g, 
+                '<span class="font-semibold text-slate-900 bg-white border border-slate-200 px-1.5 py-0.5 rounded shadow-sm text-[0.95em]">$1</span>');
+
+            // 4. Bullet Points (- text) -> Card/Box Style
+            html = html.replace(/^\s*-\s+(.*$)/gim, 
+                `<div class="flex items-start gap-3 p-3 mb-2 rounded-lg bg-white border border-slate-100 shadow-sm hover:shadow-md hover:border-indigo-100 transition-all">
+                    <div class="mt-0.5 text-indigo-500 min-w-[16px]">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
+                    </div>
+                    <p class="text-sm text-slate-600 leading-relaxed">$1</p>
+                 </div>`);
+
+            // 5. Line Breaks - Handle paragraphs
+            // Convert double newlines to a spacer
+            html = html.replace(/\n\n/g, '<div class="h-2"></div>');
+            // Remove remaining single newlines to prevent weird spacing inside divs
+            html = html.replace(/\n/g, '');
+
+            return html;
+        }
+    </script>
+</body>
+</html>
